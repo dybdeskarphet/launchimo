@@ -1,5 +1,4 @@
 # Launchimo
-## 🧻 Description 
 A very minimalistic launcher app for Android written with Jetpack Compose. You can [download it from here](https://github.com/dybdeskarphet/launchimo/releases/download/1.0.0/app-release.apk)
 
 ## ✨ Screenshots
