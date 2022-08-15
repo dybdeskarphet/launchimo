@@ -46,7 +46,7 @@ fun SettingsScreen(navController: NavHostController) {
         modifier = Modifier.fillMaxSize(),
         color = settingsBackground,
     ) {
-        Column() {
+        Column {
 
             Box(
                modifier = Modifier
@@ -73,7 +73,7 @@ fun SettingsScreen(navController: NavHostController) {
 @Composable
 fun SettingsSwitch(text: String, sharedKey: String, checkedState: MutableState<Boolean>) {
 
-    Column() {
+    Column {
         Row(
             modifier = Modifier
                 .fillMaxWidth()

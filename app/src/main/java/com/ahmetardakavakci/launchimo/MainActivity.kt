@@ -72,7 +72,7 @@ class MainActivity : ComponentActivity() {
         allApps = pm.queryIntentActivities(intent, 0)
 
         // Shared preferences
-        sharedPreferences = getSharedPreferences("com.ahmetardakavakci.launchimo", Context.MODE_PRIVATE);
+        sharedPreferences = getSharedPreferences("com.ahmetardakavakci.launchimo", Context.MODE_PRIVATE)
         editor = sharedPreferences.edit()
 
         // Window variable for coloring
@@ -127,7 +127,7 @@ fun MainScreen(navController: NavHostController) {
         modifier = Modifier.fillMaxSize(),
         color = Color.Transparent
     ) {
-        Column() {
+        Column {
             // App list
             Surface(
                 modifier = Modifier
