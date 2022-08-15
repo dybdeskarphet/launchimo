@@ -2,10 +2,12 @@ package com.ahmetardakavakci.launchimo
 
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.view.Window
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -15,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,31 +29,56 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.ahmetardakavakci.launchimo.ui.theme.LaunchimoTheme
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import java.util.*
 
 private lateinit var pm: PackageManager
+
+// Lists
 private lateinit var appsList: List<App>
 private lateinit var appsListUnsorted: ArrayList<App>
 private lateinit var allApps: List<ResolveInfo>
-private val rounded = RoundedCornerShape(30.dp)
-private val colorBackground = Color(0xF2262626)
-private val colorItemBackground = Color(0xFF404040)
-private val textColor = Color.White
-private val accentColor = Color(0xFFEF9A9A)
+
+// Colors and shapes
+val rounded = RoundedCornerShape(30.dp)
+var colorBackground = Color(0xF2262626)
+var colorItemBackground = Color(0xFF404040)
+var textColor = Color.White
+var accentColor = Color(0xFFC5CAE9)
+private var searchbarColor = Color(0xF2262626)
+// Color related
+lateinit var w: Window
+
+// Shared preferences
+lateinit var sharedPreferences: SharedPreferences
+lateinit var editor: SharedPreferences.Editor
 
 class MainActivity : ComponentActivity() {
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        pm = this.packageManager
+        // Intent for list of all apps
         val intent = Intent(Intent.ACTION_MAIN, null)
         intent.addCategory(Intent.CATEGORY_LAUNCHER)
+
+        // Get all the apps from package manager
+        pm = this.packageManager
         allApps = pm.queryIntentActivities(intent, 0)
+
+        // Shared preferences
+        sharedPreferences = getSharedPreferences("com.ahmetardakavakci.launchimo", Context.MODE_PRIVATE);
+        editor = sharedPreferences.edit()
+
+        // Window variable for coloring
+        w = window
+
+        // Lists
         appsListUnsorted = arrayListOf()
         appsList = listOf()
 
@@ -69,23 +97,38 @@ class MainActivity : ComponentActivity() {
         appsList = appsListUnsorted.sortedBy { it.label }
 
         setContent {
+            val navController = rememberNavController()
             LaunchimoTheme {
-                    MainScreen()
+                NavHost(
+                    navController = navController,
+                    startDestination = "main"
+                ) {
+                    composable("main") {
+                        MainScreen(navController)
+                    }
+                    composable("settings") {
+                        SettingsScreen(navController)
+                    }
+                }
             }
         }
     }
 }
 
-@Composable
-fun MainScreen() {
 
-   var searchInput by remember { mutableStateOf(TextFieldValue())}
+@Composable
+fun MainScreen(navController: NavHostController) {
+
+    checkDarkMode()
+
+    var searchInput by remember { mutableStateOf(TextFieldValue())}
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = Color.Transparent,
+        color = Color.Transparent
     ) {
         Column() {
+            // App list
             Surface(
                 modifier = Modifier
                     .padding(10.dp)
@@ -97,17 +140,25 @@ fun MainScreen() {
                 AppList(appsList, searchInput)
             }
 
+            // Searchbar
             Box(Modifier.weight(1f)
             ) {
                 TextField(
                     modifier = Modifier
-                        .padding(PaddingValues(top = 5.dp, bottom = 10.dp, start = 10.dp, end = 10.dp))
+                        .padding(
+                            PaddingValues(
+                                top = 5.dp,
+                                bottom = 10.dp,
+                                start = 10.dp,
+                                end = 10.dp
+                            )
+                        )
                         .fillMaxHeight()
                         .fillMaxWidth()
                         .clip(rounded)
                         .align(Alignment.Center)
                     ,colors = TextFieldDefaults.textFieldColors(
-                        backgroundColor = colorBackground,
+                        backgroundColor = searchbarColor,
                         cursorColor = textColor,
                         textColor = textColor,
                         focusedIndicatorColor = Color.Transparent,
@@ -121,21 +172,42 @@ fun MainScreen() {
                             contentDescription = "",
                             modifier = Modifier
                                 .padding(15.dp)
-                                .size(24.dp),
+                                .size(24.dp)
+                                .clickable {
+                                    navController.navigate("settings")
+                                },
                             tint = accentColor
                         )
+                    },
+                    trailingIcon = {
+                        when {
+                            searchInput.text.isNotEmpty() ->
+                                Icon(
+                                    Icons.Default.Clear,
+                                    contentDescription = "",
+                                    tint = accentColor,
+                                    modifier = Modifier
+                                        .padding(15.dp)
+                                        .size(24.dp)
+                                        .clickable {
+                                            searchInput = TextFieldValue("")
+                                        }
+                                )
+                        }
                     },
                     maxLines = 1,
                     value = searchInput,
                     onValueChange = {
                         searchInput = it
-                })
+                    })
             }
 
         }
 
     }
+
 }
+
 
 @Composable
 fun AppLine(context: Context, label: String, icon: Drawable, intent: Intent) {
@@ -147,7 +219,7 @@ fun AppLine(context: Context, label: String, icon: Drawable, intent: Intent) {
             }
         ,shape = RoundedCornerShape(23.dp),
         backgroundColor = colorItemBackground,
-        elevation = 10.dp,
+        elevation = 0.dp,
 
         ) {
         Row(
@@ -221,11 +293,33 @@ fun AppList(apps: List<App>, state: TextFieldValue) {
 
 }
 
+fun checkDarkMode() {
+
+    w.navigationBarColor = android.graphics.Color.TRANSPARENT
+    w.statusBarColor = android.graphics.Color.TRANSPARENT
+
+    when(sharedPreferences.getBoolean("darkMode", true)) {
+        true -> {
+            colorBackground = Color(0xF2262626)
+            colorItemBackground = Color(0xFF404040)
+            textColor = Color.White
+            accentColor = Color(0xFFC5CAE9)
+            searchbarColor = Color(0xF2262626)
+        }
+        false -> {
+            colorBackground = Color(0xF2FFFFFF)
+            colorItemBackground = Color(0xFFE8EAF6)
+            accentColor = Color(0xFF3949AB)
+            textColor = Color.Black
+            searchbarColor = colorItemBackground
+        }
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
     LaunchimoTheme {
-        AppLine(context = LocalContext.current, label = "App name", icon = ContextCompat.getDrawable(
-            LocalContext.current, R.drawable.ic_launcher_background)!!, intent = Intent())
+        SettingsSwitch("Dark mode", "darkMode", remember { mutableStateOf(true) })
     }
 }
