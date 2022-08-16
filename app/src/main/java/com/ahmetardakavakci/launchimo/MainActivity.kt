@@ -6,12 +6,13 @@ import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.view.Window
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,9 +20,11 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -29,12 +32,15 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.ahmetardakavakci.launchimo.ui.theme.LaunchimoTheme
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
+import com.google.accompanist.insets.LocalWindowInsets
+import com.google.accompanist.insets.rememberInsetsPaddingValues
 import java.util.*
 
 private lateinit var pm: PackageManager
@@ -45,12 +51,14 @@ private lateinit var appsListUnsorted: ArrayList<App>
 private lateinit var allApps: List<ResolveInfo>
 
 // Colors and shapes
+var settingsAlpha: Float = 0f
 val rounded = RoundedCornerShape(30.dp)
 var colorBackground = Color(0xF2262626)
 var colorItemBackground = Color(0xFF404040)
 var textColor = Color.White
 var accentColor = Color(0xFFC5CAE9)
 private var searchbarColor = Color(0xF2262626)
+
 // Color related
 lateinit var w: Window
 
@@ -113,6 +121,7 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
 }
 
 
@@ -120,14 +129,22 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(navController: NavHostController) {
 
     checkDarkMode()
+    checkHideSettings()
 
     var searchInput by remember { mutableStateOf(TextFieldValue())}
+    var expanded by remember { mutableStateOf(false) }
 
-    Surface(
+        Surface(
         modifier = Modifier.fillMaxSize(),
         color = Color.Transparent
     ) {
-        Column {
+        Column (
+            modifier = Modifier
+                .padding(rememberInsetsPaddingValues(
+                    insets = LocalWindowInsets.current.systemBars,
+                    applyTop = true,
+                    applyBottom = true))
+            ) {
             // App list
             Surface(
                 modifier = Modifier
@@ -138,6 +155,24 @@ fun MainScreen(navController: NavHostController) {
                 ,color = colorBackground
             ) {
                 AppList(appsList, searchInput)
+            }
+
+            DropdownMenu(
+                modifier = Modifier
+                    .background(colorItemBackground)
+                ,expanded = expanded,
+                onDismissRequest = { expanded = false },
+            ) {
+                DropdownMenuItem(
+                    onClick = {
+                        expanded = !expanded
+                    }
+                ) {
+                    Text(
+                        text = "App Info",
+                        color = textColor
+                    )
+                }
             }
 
             // Searchbar
@@ -173,26 +208,41 @@ fun MainScreen(navController: NavHostController) {
                             modifier = Modifier
                                 .padding(15.dp)
                                 .size(24.dp)
-                                .clickable {
-                                    navController.navigate("settings")
-                                },
-                            tint = accentColor
+                            ,tint = accentColor
                         )
                     },
                     trailingIcon = {
                         when {
-                            searchInput.text.isNotEmpty() ->
-                                Icon(
-                                    Icons.Default.Clear,
-                                    contentDescription = "",
-                                    tint = accentColor,
-                                    modifier = Modifier
-                                        .padding(15.dp)
-                                        .size(24.dp)
-                                        .clickable {
-                                            searchInput = TextFieldValue("")
-                                        }
-                                )
+                            searchInput.text.isNotEmpty() -> {
+                                Box(modifier = Modifier.clickable {
+                                    searchInput = TextFieldValue("")
+                                }) {
+                                    Icon(
+                                        Icons.Default.Clear,
+                                        contentDescription = "",
+                                        tint = accentColor,
+                                        modifier = Modifier
+                                            .padding(15.dp)
+                                            .size(24.dp)
+                                    )
+                                }
+                            }
+
+                            else -> {
+                                Box(modifier = Modifier.clickable {
+                                    navController.navigate("settings")
+                                }) {
+                                    Icon(
+                                        Icons.Default.Settings,
+                                        contentDescription = "",
+                                        tint = accentColor,
+                                        modifier = Modifier
+                                            .padding(15.dp)
+                                            .size(24.dp)
+                                            .alpha(settingsAlpha)
+                                    )
+                                }
+                            }
                         }
                     },
                     maxLines = 1,
@@ -200,6 +250,7 @@ fun MainScreen(navController: NavHostController) {
                     onValueChange = {
                         searchInput = it
                     })
+
             }
 
         }
@@ -208,16 +259,34 @@ fun MainScreen(navController: NavHostController) {
 
 }
 
-
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun AppLine(context: Context, label: String, icon: Drawable, intent: Intent) {
+fun AppLine(context: Context, label: String, icon: Drawable, intent: Intent, pkgname: String) {
+
+    var expanded by remember { mutableStateOf(false) }
+
+    // Details Settings Intent
+    val toSettings = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+    val settingsPackageUri = Uri.fromParts("package", pkgname, null)
+    toSettings.data = settingsPackageUri
+
+    // Uninstall Intent
+    val uninstallIntent = Intent(Intent.ACTION_DELETE)
+    val uninstallPackageUri = Uri.parse("package:$pkgname")
+    uninstallIntent.data = uninstallPackageUri
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable {
-                context.startActivity(intent)
-            }
-        ,shape = RoundedCornerShape(23.dp),
+            .combinedClickable(
+                onClick = {
+                    context.startActivity(intent)
+                },
+                onLongClick = {
+                    expanded = !expanded
+                }
+            ),
+        shape = RoundedCornerShape(23.dp),
         backgroundColor = colorItemBackground,
         elevation = 0.dp,
 
@@ -243,6 +312,37 @@ fun AppLine(context: Context, label: String, icon: Drawable, intent: Intent) {
                 color = textColor,
                 fontSize = 20.sp
             )
+
+            DropdownMenu(
+                modifier = Modifier
+                    .background(colorItemBackground)
+                ,expanded = expanded,
+                onDismissRequest = { expanded = false },
+            ) {
+                DropdownMenuItem(
+                    onClick = {
+                        context.startActivity(toSettings)
+                        expanded = !expanded
+                    }
+                ) {
+                    Text(
+                        text = "App Info",
+                        color = textColor
+                    )
+                }
+
+                DropdownMenuItem(
+                    onClick = {
+                        context.startActivity(uninstallIntent)
+                        expanded = !expanded
+                    }
+                ) {
+                    Text(
+                        text = "Uninstall",
+                        color = textColor
+                    )
+                }
+            }
         }
 
     }
@@ -255,7 +355,12 @@ fun AppList(apps: List<App>, state: TextFieldValue) {
 
     // App List
     LazyColumn(
-        contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = 0.dp, bottom = 8.dp),
+        contentPadding = PaddingValues(
+            start = 8.dp,
+            end = 8.dp,
+            top = 0.dp,
+            bottom = 8.dp
+        ),
         reverseLayout = true
     ) {
 
@@ -285,7 +390,8 @@ fun AppList(apps: List<App>, state: TextFieldValue) {
                     context = context,
                     label = filteredApps[app].label,
                     icon = filteredApps[app].icon,
-                    intent = filteredApps[app].intent
+                    intent = filteredApps[app].intent,
+                    pkgname = filteredApps[app].pkgName
                 )
                 Spacer(modifier = Modifier.height(10.dp))
         })
@@ -316,10 +422,28 @@ fun checkDarkMode() {
     }
 }
 
+fun checkHideSettings() {
+    when(sharedPreferences.getBoolean("hideSettings", false)) {
+        true -> {
+            settingsAlpha = 0f
+        }
+
+        false -> {
+            settingsAlpha = 1f
+        }
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
-fun DefaultPreview() {
+fun MainPreview() {
     LaunchimoTheme {
-        SettingsSwitch("Dark mode", "darkMode", remember { mutableStateOf(true) })
+        AppLine(
+            context = LocalContext.current,
+            label = "App name",
+            icon = ContextCompat.getDrawable(LocalContext.current,R.drawable.ic_launcher_foreground)!!,
+            intent = Intent(),
+            pkgname = "hello.hello.hello"
+        )
     }
 }

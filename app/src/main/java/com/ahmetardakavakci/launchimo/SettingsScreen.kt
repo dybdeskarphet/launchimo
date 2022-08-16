@@ -13,9 +13,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.ahmetardakavakci.launchimo.ui.theme.LaunchimoTheme
 
 var thumbColor: Color = Color(0xFF2C2C2C)
 var uncheckedThumbColor: Color = Color(0xFF2C2C2C)
@@ -23,7 +25,8 @@ var uncheckedThumbColor: Color = Color(0xFF2C2C2C)
 @Composable
 fun SettingsScreen(navController: NavHostController) {
 
-    val darkMode = remember { mutableStateOf(sharedPreferences.getBoolean("darkMode", false)) }
+    val darkMode = remember { mutableStateOf(sharedPreferences.getBoolean("darkMode", true)) }
+    val hideSettings = remember { mutableStateOf(sharedPreferences.getBoolean("hideSettings", false)) }
     var settingsBackground: Color
 
     checkDarkMode()
@@ -66,6 +69,7 @@ fun SettingsScreen(navController: NavHostController) {
             }
 
             SettingsSwitch("Dark mode", "darkMode", darkMode)
+            SettingsSwitch("Transparent Settings icon", "hideSettings", hideSettings)
         }
     }
 }
@@ -105,5 +109,13 @@ fun SettingsSwitch(text: String, sharedKey: String, checkedState: MutableState<B
                 }
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SettingsPreview() {
+    LaunchimoTheme {
+        SettingsSwitch("Dark mode", "darkMode", remember { mutableStateOf(true) })
     }
 }
