@@ -1,4 +1,4 @@
-package com.ahmetardakavakci.launchimo
+package com.ahmetardakavakci.launchimo.model
 
 import android.content.Intent
 import android.graphics.drawable.Drawable

@@ -1,8 +1,6 @@
-package com.ahmetardakavakci.launchimo
+package com.ahmetardakavakci.launchimo.view
 
-import android.content.Context
-import android.content.Intent
-import android.content.SharedPreferences
+import android.content.*
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import android.graphics.drawable.Drawable
@@ -37,12 +35,16 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.ahmetardakavakci.launchimo.R
+import com.ahmetardakavakci.launchimo.SettingsScreen
+import com.ahmetardakavakci.launchimo.model.App
 import com.ahmetardakavakci.launchimo.ui.theme.LaunchimoTheme
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.accompanist.insets.LocalWindowInsets
 import com.google.accompanist.insets.rememberInsetsPaddingValues
 import java.util.*
 
+// Package manager
 private lateinit var pm: PackageManager
 
 // Lists
@@ -121,7 +123,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
 }
 
 
@@ -441,7 +442,7 @@ fun MainPreview() {
         AppLine(
             context = LocalContext.current,
             label = "App name",
-            icon = ContextCompat.getDrawable(LocalContext.current,R.drawable.ic_launcher_foreground)!!,
+            icon = ContextCompat.getDrawable(LocalContext.current, R.drawable.ic_launcher_foreground)!!,
             intent = Intent(),
             pkgname = "hello.hello.hello"
         )

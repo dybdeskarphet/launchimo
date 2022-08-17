@@ -23,7 +23,7 @@
         android:theme="@style/Theme.Launchimo"
         tools:targetApi="31">
         <activity
-            android:name=".MainActivity"
+            android:name=".view.MainActivity"
             android:windowSoftInputMode="adjustPan"
             android:exported="true"
             android:label="@string/app_name"
