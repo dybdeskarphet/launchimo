@@ -1,6 +1,7 @@
 # To-do
 - [ ] Refresh app list after an app is installed 
 - [ ] Use `xml` for theming values. (What were you thinking when you did it programmatically?)
+- [ ] Add accent color picker
 - [ ] Add more settings
   - [ ] `itemBackground` alpha
   - [ ] Disable icons
