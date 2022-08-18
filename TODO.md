@@ -1,10 +1,10 @@
 # To-do
 - [ ] Refresh app list after an app is installed 
-- [ ] Use `xml` for theming values. (What were you thinking when you did it programmatically?)
+- [ ] Use `xml` for theming values. (What were you thinking when you did it programmatically?x
 - [ ] Add accent color picker
-- [ ] Add more settings
-  - [ ] `itemBackground` alpha
-  - [ ] Disable icons
+- [x] Add more settings
+  - [x] `itemBackground` alpha
+  - [x] Disable icons
 - [x] *(Didn't do it but I guess it's not needed?)* Use coroutines for creating a list
 - [x] Fix: Switches other then Dark Mode switch doesn't use current mode colors at first
 - [x] White background on the settings screen initially

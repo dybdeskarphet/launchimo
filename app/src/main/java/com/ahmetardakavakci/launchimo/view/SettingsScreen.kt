@@ -1,4 +1,4 @@
-package com.ahmetardakavakci.launchimo
+package com.ahmetardakavakci.launchimo.view
 
 import android.app.Activity
 import androidx.compose.foundation.background
@@ -7,26 +7,25 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.ahmetardakavakci.launchimo.ui.theme.LaunchimoTheme
-import com.ahmetardakavakci.launchimo.view.*
 
 var thumbColor: Color = Color(0xFF2C2C2C)
 var uncheckedThumbColor: Color = Color(0xFF2C2C2C)
 var settingsBackground: Color = Color(0xFF262626)
+var settingsItemBackground: Color = Color(0xFF404040)
+var settingsTextColor: Color = Color.White
 var descTextColor: Color = Color.LightGray
 
 @Composable
@@ -35,7 +34,10 @@ fun SettingsScreen(navController: NavHostController) {
     // Switch mutables
     val darkMode = remember { mutableStateOf(sharedPreferences.getBoolean("darkMode", true)) }
     val hideSettings = remember { mutableStateOf(sharedPreferences.getBoolean("hideSettings", false)) }
+    val hideIcons = remember { mutableStateOf(sharedPreferences.getBoolean("hideIcons", false)) }
 
+    val listBackgroundAlpha = remember { mutableStateOf(sharedPreferences.getFloat("listBackgroundAlpha", 0.9f)) }
+    val appBackgroundAlpha = remember { mutableStateOf(sharedPreferences.getFloat("appBackgroundAlpha", 1.0f)) }
 
     // Context
     val activity = LocalContext.current as Activity
@@ -47,6 +49,8 @@ fun SettingsScreen(navController: NavHostController) {
         w.navigationBarColor = android.graphics.Color.DKGRAY
         w.statusBarColor = android.graphics.Color.DKGRAY
         settingsBackground = Color(0xFF262626)
+        settingsItemBackground = Color(0xFF404040)
+        settingsTextColor = Color.White
         thumbColor = Color(0xFF262626)
         uncheckedThumbColor = Color.LightGray
         descTextColor = Color.LightGray
@@ -54,6 +58,8 @@ fun SettingsScreen(navController: NavHostController) {
         w.navigationBarColor = android.graphics.Color.LTGRAY
         w.statusBarColor = android.graphics.Color.LTGRAY
         settingsBackground = Color(0xFFFFFFFF)
+        settingsItemBackground = Color(0xFFE8EAF6)
+        settingsTextColor = Color.Black
         thumbColor = Color.LightGray
         uncheckedThumbColor = Color.DarkGray
         descTextColor = Color.DarkGray
@@ -65,6 +71,7 @@ fun SettingsScreen(navController: NavHostController) {
     ) {
         Column {
 
+            // Back button
             Box(
                modifier = Modifier
                    .background(Color.Transparent)
@@ -82,8 +89,12 @@ fun SettingsScreen(navController: NavHostController) {
                 )
             }
 
+            // Setting options
             SettingsSwitch("Dark mode","Makes the app dark", "darkMode", darkMode, navController)
             SettingsSwitch("Transparent Settings icon", "Makes the settings icon transparent. You can still click it but the icon will not be visible.", "hideSettings", hideSettings, navController)
+            SettingsSwitch("Hide app icons", "Only show the app name on the list", "hideIcons", hideIcons, navController)
+            SettingsAlphaDropdown("List background alpha","Transparency value for app list background","listBackgroundAlpha", listBackgroundAlpha)
+            SettingsAlphaDropdown("App background alpha","Transparency value for background of every app in the list","appBackgroundAlpha", appBackgroundAlpha)
             SettingsText(text = "Restart launcher") {
                 activity.finish()
                 activity.startActivity(intent)
@@ -104,7 +115,7 @@ fun SettingsText(text: String, textClicked: () -> Unit) {
                 bottom = 15.dp)
             )
             .clip(rounded)
-            .background(colorItemBackground)
+            .background(settingsItemBackground)
     ) {
         Text(
             modifier = Modifier
@@ -113,7 +124,7 @@ fun SettingsText(text: String, textClicked: () -> Unit) {
                 .padding(start = 15.dp, top = 15.dp, bottom = 15.dp)
             ,text = text,
 
-            color = textColor,
+            color = settingsTextColor,
             fontSize = 20.sp
         )
     }
@@ -125,7 +136,8 @@ fun SettingsSwitch(text: String, descText: String, sharedKey: String, checkedSta
         Row(
             modifier = Modifier
                 .clip(rounded)
-                .background(colorItemBackground)
+                .background(settingsItemBackground)
+                .fillMaxWidth()
             ,horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -138,7 +150,7 @@ fun SettingsSwitch(text: String, descText: String, sharedKey: String, checkedSta
             ) {
                 Text(
                     text = text,
-                    color = textColor,
+                    color = settingsTextColor,
                     fontSize = 20.sp
                 )
                 Spacer(modifier = Modifier.height(3.dp))
@@ -175,16 +187,120 @@ fun SettingsSwitch(text: String, descText: String, sharedKey: String, checkedSta
     }
 }
 
+@Composable
+fun SettingsAlphaDropdown(text: String, descText: String, sharedKey: String, lastValue: MutableState<Float>) {
+    var expanded by remember { mutableStateOf(false) }
+    var lastDropdownValue by remember { mutableStateOf(lastValue.value.toString()) }
+
+    Box(Modifier
+        .padding(PaddingValues(start = 15.dp, end = 15.dp, bottom = 15.dp))
+        .clip(rounded)
+        .fillMaxWidth()
+        .background(settingsItemBackground)
+    ) {
+        Row(
+            modifier = Modifier.padding(PaddingValues(start = 17.dp, top = 17.dp, bottom = 17.dp)),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            Column(modifier = Modifier.weight(6.7f)) {
+                Text(
+                    text = text,
+                    color = settingsTextColor,
+                    fontSize = 20.sp
+                )
+                Spacer(modifier = Modifier.height(3.dp))
+                Text(
+                    text = descText,
+                    color = descTextColor,
+                    fontSize = 14.sp
+                )
+            }
+
+            Box(modifier = Modifier
+                .weight(3.3f)
+                .clickable {
+                    expanded = !expanded
+                }
+            ) {
+                Row(horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+
+                    TextField(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                        ,value = lastDropdownValue,
+                        readOnly = true,
+                        enabled = false,
+                        textStyle = TextStyle(fontSize = 20.sp),
+                        trailingIcon = {
+                            Icon(
+                                Icons.Default.ArrowDropDown,
+                                contentDescription = "",
+                                modifier = Modifier
+                                    .size(24.dp)
+                                ,tint = accentColor
+                            )
+                        },
+                        colors = TextFieldDefaults.textFieldColors(
+                            textColor = settingsTextColor,
+                            disabledTextColor = settingsTextColor,
+                            backgroundColor = Color.Transparent,
+                            cursorColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            disabledIndicatorColor = Color.Transparent,
+                            errorIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent
+                        ),
+                        onValueChange = { lastDropdownValue = it }
+                    )
+
+
+                    DropdownMenu(
+                        modifier = Modifier.background(settingsItemBackground),
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                    ) {
+                        for (i in 0..9) {
+                            DropdownMenuItem(onClick = {
+                                expanded = !expanded
+                                lastDropdownValue = "0.$i"
+                                editor.putFloat(sharedKey, ("0.${i}").toFloat())
+                                editor.commit()
+                            }) {
+                                Text(
+                                    text = "0.${i}",
+                                    color = settingsTextColor
+                                )
+                            }
+                        }
+
+                        DropdownMenuItem(onClick = {
+                            expanded = !expanded
+                            lastDropdownValue = "1.0"
+                            editor.putFloat(sharedKey, 1.0f)
+                            editor.commit()
+                        }) {
+                            Text(
+                                text = "1.0",
+                                color = settingsTextColor
+                            )
+                        }
+                    }
+
+                }
+            }
+
+
+        }
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun SettingsPreview() {
     LaunchimoTheme {
-        Column() {
-            SettingsSwitch("Dark mode", "Lorem ipsum dolor sit amet aşsldfjşaslfjdaşlsfdaşsldfsaflşasşfafdşkasfdşlasdfljkafadaşsldkfjaşksdfaşsdfaşsldkfjasşlfjasfdklasfdaslkdfjaşldfkjaskfdladfklasdfjasklşdfjasfdk", "darkMode", remember { mutableStateOf(true) }, navController = rememberNavController())
-            SettingsSwitch("Dark mode", "Lorem ipsum dolor sit amet aşsldfjşaslfjdaşlsfdaşsldfsaflşasşfafdşkasfdşlasdfljkafadaşsldkfjaşksdfaşsdf", "darkMode", remember { mutableStateOf(true) }, navController = rememberNavController())
-            SettingsText(text = "Hey") {
-
-            }
+        Column {
         }
     }
 }

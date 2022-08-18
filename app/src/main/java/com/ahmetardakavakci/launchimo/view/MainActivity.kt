@@ -36,13 +36,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.ahmetardakavakci.launchimo.R
-import com.ahmetardakavakci.launchimo.SettingsScreen
 import com.ahmetardakavakci.launchimo.model.App
 import com.ahmetardakavakci.launchimo.ui.theme.LaunchimoTheme
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.accompanist.insets.LocalWindowInsets
 import com.google.accompanist.insets.rememberInsetsPaddingValues
 import java.util.*
+import kotlin.math.roundToInt
 
 // Package manager
 private lateinit var pm: PackageManager
@@ -52,11 +52,20 @@ private lateinit var appsList: List<App>
 private lateinit var appsListUnsorted: ArrayList<App>
 private lateinit var allApps: List<ResolveInfo>
 
+// Alphas
+var listBackgroundAlpha: Float = 0.9f // (0-255) Approximately 0.9
+var appBackgroundAlpha: Float = 1.0f // (0-255) Approximately 0.9
+var settingsIconAlpha: Float = 0f
+
+// Boolean
+var hideIcons = false
+
 // Colors and shapes
-var settingsAlpha: Float = 0f
 val rounded = RoundedCornerShape(30.dp)
 var colorBackground = Color(0xF2262626)
 var colorItemBackground = Color(0xFF404040)
+var dropdownBackground = Color(0xFF404040)
+var dropdownTextColor = Color.White
 var textColor = Color.White
 var accentColor = Color(0xFFC5CAE9)
 private var searchbarColor = Color(0xF2262626)
@@ -129,8 +138,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen(navController: NavHostController) {
 
+    checkSettings()
     checkDarkMode()
-    checkHideSettings()
 
     var searchInput by remember { mutableStateOf(TextFieldValue())}
     var expanded by remember { mutableStateOf(false) }
@@ -240,7 +249,7 @@ fun MainScreen(navController: NavHostController) {
                                         modifier = Modifier
                                             .padding(15.dp)
                                             .size(24.dp)
-                                            .alpha(settingsAlpha)
+                                            .alpha(settingsIconAlpha)
                                     )
                                 }
                             }
@@ -277,76 +286,77 @@ fun AppLine(context: Context, label: String, icon: Drawable, intent: Intent, pkg
     uninstallIntent.data = uninstallPackageUri
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .combinedClickable(
-                onClick = {
-                    context.startActivity(intent)
-                },
-                onLongClick = {
-                    expanded = !expanded
-                }
-            ),
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(23.dp),
         backgroundColor = colorItemBackground,
         elevation = 0.dp,
-
-        ) {
-        Row(
-            modifier = Modifier
-                .padding(PaddingValues(vertical = 8.dp, horizontal = 8.dp))
-            ,verticalAlignment = Alignment.CenterVertically
-        ) {
-            Image(
-                modifier = Modifier
-                    .padding(PaddingValues(start = 5.dp))
-                    .width(40.dp)
-                    .height(40.dp)
-                ,painter = rememberDrawablePainter(drawable = icon),
-                contentDescription = label
-            )
-
-            Spacer(modifier = Modifier.width(10.dp))
-
-            Text(
-                text = label,
-                color = textColor,
-                fontSize = 20.sp
-            )
-
-            DropdownMenu(
-                modifier = Modifier
-                    .background(colorItemBackground)
-                ,expanded = expanded,
-                onDismissRequest = { expanded = false },
+    ) {
+        Box(modifier = Modifier.combinedClickable(
+            onClick = {
+                context.startActivity(intent)
+            },
+            onLongClick = {
+                expanded = !expanded
+            }
+        )) {
+            Row(
+                modifier = Modifier.padding(PaddingValues(vertical = 8.dp, horizontal = 8.dp)),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                DropdownMenuItem(
-                    onClick = {
-                        context.startActivity(toSettings)
-                        expanded = !expanded
-                    }
-                ) {
-                    Text(
-                        text = "App Info",
-                        color = textColor
+
+                if (!hideIcons) {
+                    Image(
+                        modifier = Modifier
+                            .padding(PaddingValues(start = 5.dp))
+                            .width(40.dp)
+                            .height(40.dp), painter = rememberDrawablePainter(drawable = icon),
+                        contentDescription = label
                     )
+
+                    Spacer(modifier = Modifier.width(10.dp))
                 }
 
-                DropdownMenuItem(
-                    onClick = {
-                        context.startActivity(uninstallIntent)
-                        expanded = !expanded
-                    }
+                Text(
+                    text = label,
+                    color = textColor,
+                    fontSize = 20.sp
+                )
+
+                DropdownMenu(
+                    modifier = Modifier
+                        .background(colorItemBackground),
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
                 ) {
-                    Text(
-                        text = "Uninstall",
-                        color = textColor
-                    )
+                    DropdownMenuItem(
+                        onClick = {
+                            context.startActivity(toSettings)
+                            expanded = !expanded
+                        }
+                    ) {
+                        Text(
+                            text = "App Info",
+                            color = textColor
+                        )
+                    }
+
+                    DropdownMenuItem(
+                        onClick = {
+                            context.startActivity(uninstallIntent)
+                            expanded = !expanded
+                        }
+                    ) {
+                        Text(
+                            text = "Uninstall",
+                            color = textColor
+                        )
+                    }
                 }
             }
         }
 
     }
+
 }
 
 @Composable
@@ -407,32 +417,45 @@ fun checkDarkMode() {
 
     when(sharedPreferences.getBoolean("darkMode", true)) {
         true -> {
-            colorBackground = Color(0xF2262626)
-            colorItemBackground = Color(0xFF404040)
-            textColor = Color.White
+            colorBackground = Color(red = 38, blue = 38, green = 38, alpha = (listBackgroundAlpha*255).roundToInt())
+            colorItemBackground = Color(red = 64, blue = 64, green = 64, alpha = (appBackgroundAlpha*255).roundToInt())
+            dropdownBackground = Color(red = 64, blue = 64, green = 64, alpha = 255)
+            dropdownTextColor = Color.White
             accentColor = Color(0xFFC5CAE9)
             searchbarColor = Color(0xF2262626)
+            textColor = Color.White
         }
         false -> {
-            colorBackground = Color(0xF2FFFFFF)
-            colorItemBackground = Color(0xFFE8EAF6)
+            colorBackground = Color(red = 255, blue = 255, green = 255, alpha = (listBackgroundAlpha*255).roundToInt())
+            colorItemBackground = Color(red = 232, green = 234, blue = 246, alpha = (appBackgroundAlpha*255).roundToInt())
+            dropdownBackground = Color(red = 232, green = 234, blue = 246, alpha = 255)
+            dropdownTextColor = Color.Black
             accentColor = Color(0xFF3949AB)
-            textColor = Color.Black
-            searchbarColor = colorItemBackground
+            searchbarColor = Color(red = 232, green = 234, blue = 246, alpha = 255)
+            textColor = if(listBackgroundAlpha < 0.5 && appBackgroundAlpha < 0.5) {
+                Color.White
+            } else {
+                Color.Black
+            }
+
         }
     }
 }
 
-fun checkHideSettings() {
-    when(sharedPreferences.getBoolean("hideSettings", false)) {
-        true -> {
-            settingsAlpha = 0f
-        }
-
-        false -> {
-            settingsAlpha = 1f
-        }
+fun checkSettings() {
+    settingsIconAlpha = when(sharedPreferences.getBoolean("hideSettings", false)) {
+        true -> 0f
+        false -> 1f
     }
+
+    hideIcons = when(sharedPreferences.getBoolean("hideIcons", false)) {
+        true -> true
+        false -> false
+    }
+
+    listBackgroundAlpha = sharedPreferences.getFloat("listBackgroundAlpha",  0.9f)
+    appBackgroundAlpha = sharedPreferences.getFloat("appBackgroundAlpha",  1.0f)
+
 }
 
 @Preview(showBackground = true)
@@ -444,7 +467,7 @@ fun MainPreview() {
             label = "App name",
             icon = ContextCompat.getDrawable(LocalContext.current, R.drawable.ic_launcher_foreground)!!,
             intent = Intent(),
-            pkgname = "hello.hello.hello"
+            pkgname = "none"
         )
     }
 }
