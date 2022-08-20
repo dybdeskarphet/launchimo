@@ -11,4 +11,4 @@
 - [x] Add long click options menu to apps
 - [x] Fix: Layout doesn't resize itself for the keyboard at first (Solved thanks to [this person]( https://issuetracker.google.com/issues/192043120#comment100))
 - [x] Add "clear search bar text" button
-- [x] Add settings activity 10f125948e6f40b69ea72115d4ad9b173358e348
+- [x] [Add settings activity](https://github.com/dybdeskarphet/launchimo/commit/10f125948e6f40b69ea72115d4ad9b173358e348)
