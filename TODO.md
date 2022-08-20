@@ -2,13 +2,13 @@
 - [ ] Refresh app list after an app is installed 
 - [ ] Use `xml` for theming values. (What were you thinking when you did it programmatically?x
 - [ ] Add accent color picker
-- [x] Add more settings
+- [x] [Add more settings](https://github.com/dybdeskarphet/launchimo/commit/ff8125633bad885311ef5ecb239d068b1e57eb19)
   - [x] `itemBackground` alpha
   - [x] Disable icons
 - [x] *(Didn't do it but I guess it's not needed?)* Use coroutines for creating a list
-- [x] Fix: Switches other then Dark Mode switch doesn't use current mode colors at first
-- [x] White background on the settings screen initially
-- [x] Add long click options menu to apps
+- [x] [Fix: Switches other then Dark Mode switch doesn't use current mode colors at first](https://github.com/dybdeskarphet/launchimo/commit/345a1ec3ad59172af3fba44017b5d1153a0b64bd)
+- [x] [White background on the settings screen initially](https://github.com/dybdeskarphet/launchimo/commit/780a01ad600fde914c4f8ec90e99f5c791698b48)
+- [x] [Add long click options menu to apps](https://github.com/dybdeskarphet/launchimo/commit/780a01ad600fde914c4f8ec90e99f5c791698b48)
 - [x] Fix: Layout doesn't resize itself for the keyboard at first (Solved thanks to [this person]( https://issuetracker.google.com/issues/192043120#comment100))
-- [x] Add "clear search bar text" button
+- [x] [Add "clear search bar text" button](https://github.com/dybdeskarphet/launchimo/commit/10f125948e6f40b69ea72115d4ad9b173358e348)
 - [x] [Add settings activity](https://github.com/dybdeskarphet/launchimo/commit/10f125948e6f40b69ea72115d4ad9b173358e348)
