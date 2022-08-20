@@ -1,6 +1,6 @@
 # To-do
 - [ ] Refresh app list after an app is installed 
-- [ ] Use `xml` for theming values. (What were you thinking when you did it programmatically?x
+- [ ] Use `xml` for theming values. (What were you thinking when you did it programmatically?)
 - [ ] Add accent color picker
 - [x] [Add more settings](https://github.com/dybdeskarphet/launchimo/commit/ff8125633bad885311ef5ecb239d068b1e57eb19)
   - [x] `itemBackground` alpha
